@@ -21,11 +21,11 @@ for i in range(len(content)):
     content[i] = content[i].replace("\n","")
 
 equality = set()
+negation = set()
 connectives = set()
 quantifiers = set()
 variables = set()
 constants = set()
-predicateList = []
 predicates = {}
 
 toPop = []
@@ -88,4 +88,3 @@ formula = "".join(content)[9:]
 formula = " ".join(formula.split())
 
 print(formula)
-
