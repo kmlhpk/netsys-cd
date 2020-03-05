@@ -28,12 +28,10 @@ for i in range(len(content)):
     if content[i][0:9] == "equality:":
         equals = content[i][10:].split(" ")
         if len(equals) == 1:
-            x = re.search("[\w\\\=]+", equals[0])
+            x = re.search("^[\w\\\=]+$", equals[0])
             if not x:
                 print(f"ERROR: Equality symbol {equals[0]} is formatted in an invalid way. Ensure it is a mix of alphanumeric characters, underscores, backslashes and = only.")
             else:
-                # BAD - Currently allows for \eq_=' but ' is not a valid character
-                # Only recognises \eq_= but allows the ' in the input
                 equality = x.group()
         elif len(equals) == 0:
             print("ERROR: Equality symbol undefined")
@@ -50,10 +48,14 @@ for i in range(len(content)):
 
 print(f"Equality symbol: {equality}")
 
+
+
 toPop.sort(reverse=True)
 for i in toPop:
     content.pop(i)
 toPop=[]
+
+print(f"Remaining content: {content}")
 
 for i in range(len(content)):
     if content[i][0:10] == "variables:":
@@ -86,6 +88,10 @@ for i in range(len(content)):
                     print(f"ERROR: Arity {num} of predicate {j} is not an integer.")
         toPop.append(i)
 
+print(f"Remaining content: {content}")
+
+print(f"second toPop: {toPop}")
+
 toPop.sort(reverse=True)
 for i in toPop:
     content.pop(i)
@@ -94,7 +100,9 @@ print()
 print(predicates)
 print()
 
+print(f"Remaining content: {content}")
+
 formula = "".join(content)[9:]
 formula = " ".join(formula.split())
 
-print(formula)
+print(f"Formula: {formula}")
