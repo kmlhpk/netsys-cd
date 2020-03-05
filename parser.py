@@ -20,14 +20,7 @@ if not content:
 for i in range(len(content)):
     content[i] = content[i].replace("\n","")
 
-equality = set()
-negation = set()
-connectives = set()
-quantifiers = set()
-variables = set()
-constants = set()
 predicates = {}
-
 toPop = []
 
 for i in range(len(content)):
@@ -36,6 +29,7 @@ for i in range(len(content)):
         toPop.append(i)
 
     elif content[i][0:12] == "connectives:":
+        # Should count Not in its own set, like equality
         connectives = set(content[i][13:].split(" "))
         toPop.append(i)
 
@@ -45,13 +39,12 @@ for i in range(len(content)):
 
     elif content[i][0:10] == "variables:":
         variableList = content[i][11:].split(" ")
-        # Should count Not in its own set, like equality
         for j in range(len(variableList)-1):
             x = re.search("\w+",variableList[j])
             if not x:
                 print(f"ERROR: Variable {j} is formatted in an invalid way. Ensure it is a mix of alphanumeric characters and underscores only.")
             else:
-        toPop.append(i)
+                toPop.append(i)
 
     elif content[i][0:10] == "constants:":
         constants = set(content[i][11:].split(" "))
