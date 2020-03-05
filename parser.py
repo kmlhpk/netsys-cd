@@ -20,24 +20,43 @@ if not content:
 for i in range(len(content)):
     content[i] = content[i].replace("\n","")
 
+equality = ""
 predicates = {}
 toPop = []
 
 for i in range(len(content)):
     if content[i][0:9] == "equality:":
-        equality = set(content[i][10:].split(" "))
+        equals = content[i][10:].split(" ")
+        if len(equals) == 1:
+            x = re.search("[\w\\\=]+", equals[0])
+            if not x:
+                print(f"ERROR: Equality symbol {equals[0]} is formatted in an invalid way. Ensure it is a mix of alphanumeric characters, underscores, backslashes and = only.")
+            else:
+                # BAD - Currently allows for \eq_=' but ' is not a valid character
+                # Only recognises \eq_= but allows the ' in the input
+                equality = x.group()
+        elif len(equals) == 0:
+            print("ERROR: Equality symbol undefined")
+        else:
+            print(f"ERROR: {len(equals)} equality symbols found, please supply only 1")
         toPop.append(i)
-
     elif content[i][0:12] == "connectives:":
         # Should count Not in its own set, like equality
         connectives = set(content[i][13:].split(" "))
         toPop.append(i)
-
     elif content[i][0:12] == "quantifiers:":
         quantifiers = set(content[i][13:].split(" "))
         toPop.append(i)
 
-    elif content[i][0:10] == "variables:":
+print(f"Equality symbol: {equality}")
+
+toPop.sort(reverse=True)
+for i in toPop:
+    content.pop(i)
+toPop=[]
+
+for i in range(len(content)):
+    if content[i][0:10] == "variables:":
         variableList = content[i][11:].split(" ")
         for j in range(len(variableList)-1):
             x = re.search("\w+",variableList[j])
@@ -45,11 +64,9 @@ for i in range(len(content)):
                 print(f"ERROR: Variable {j} is formatted in an invalid way. Ensure it is a mix of alphanumeric characters and underscores only.")
             else:
                 toPop.append(i)
-
     elif content[i][0:10] == "constants:":
         constants = set(content[i][11:].split(" "))
         toPop.append(i)
-
     elif content[i][0:11] == "predicates:":
         predicateList = content[i][12:].split(" ")
         for j in predicateList:
