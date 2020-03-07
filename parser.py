@@ -2,13 +2,17 @@ import sys
 import pathlib
 import re
 
+##############################
+#### FUNCTION DEFINITIONS ####
+##############################
+
 def populateEq(line):
     equals = line[10:].split(" ")
     # TODO may be able to do this with just regex, no splitting required
     if len(equals) == 1:
         x = re.search("^[\w\\\=]+$", equals[0])
         if not x:
-            print(f"ERROR: Equality symbol {equals[0]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores, backslashes or = only. Example: \my_eq=")
+            print(f"ERROR: Equality symbol {equals[0]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores, backslashes or = only. Example: \\my_eq=")
             sys.exit(1)
         else:
             return x.group()
@@ -27,7 +31,7 @@ def populateConn(line):
         for i in range(4):
             x = re.search("^[\w\\\]+$", entries[i])
             if not x:
-                print(f"ERROR: Connective {entries[i]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only. Example: \my_conn")
+                print(f"ERROR: Connective {entries[i]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only. Example: \\my_conn")
                 sys.exit(1)
             else:
                 conns.append(x.group())
@@ -52,7 +56,7 @@ def populateQuant(line):
         for q in entries:
             x = re.search("^[\w\\\]+$", q)
             if not x:
-                print(f"ERROR: Quantifier {q} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only. Example: \my_quant")
+                print(f"ERROR: Quantifier {q} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only. Example: \\my_quant")
                 sys.exit(1)
             else:
                 quants.append(x.group())
@@ -121,12 +125,16 @@ def populateConst(line):
             constants.append(x.group())
     return(constants)
 
+##############################
+####### FILE INGESTION #######
+##############################
+
 if len(sys.argv) != 2:
     print("ERROR: Invalid amount of arguments. Please run the program including your filename as a parameter, in the format of 'python parser.py filename.ext'")
     sys.exit(1)
 
-pathname = sys.argv[1]
-path = pathlib.Path.cwd() / pathname
+filename = sys.argv[1]
+path = pathlib.Path.cwd() / filename
 
 with open(path,"r") as f:
     content = []
@@ -135,11 +143,43 @@ with open(path,"r") as f:
 
 if not content:
     print("ERROR: Empty file")
+    sys.exit(1)
 
 ## TODO Check there are at least 7 lines, and that exactly 7 of them start "setName:" - otherwise, funky behaviour occurs. FInd the indices of the lines here, and supply them to the logic later.
 # if content[i][0:10] == "variables:":
 
-for i in range(len(content)):
+length = len(content)
+
+if length < 7:
+    print(f"ERROR: A file needs at least 7 lines to be valid, but {filename} has {length}.")
+    sys.exit(1)
+
+eqSeen = False
+connSeen = False
+quantSeen = False
+varSeen = False
+constSeen = False
+predSeen = False
+formSeen = False
+
+eqInd = 0
+connInd = 0
+quantInd = 0
+varInd = 0
+constInd = 0
+predInd = 0
+formInd = 0
+
+for line in content:
+    if line[0:10] == "variables:":
+        varSeen = True
+
+
+
+
+
+
+for i in range(length):
     content[i] = content[i].replace("\n","")
 
 # TODO Make the indices use the line indices found by line-checker
