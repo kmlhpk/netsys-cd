@@ -1,0 +1,15 @@
+Non-Terminal Symbols:
+F E T Q L C V P
+
+Terminal Symbols:
+( ) , = \neg w x y z C D P Q R \forall \exists \land \lor \iff \implies
+
+Production Rules:
+F -> (E) | Q V F | \neg F | P
+E -> T = T | F L F
+T -> C | V
+Q -> \forall | \exists
+L -> \land | \lor | \iff | \implies
+C -> C | D
+V -> w | y | x | z
+P -> P(V,V) | Q(V) | R(V,V,V,V,V)
