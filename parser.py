@@ -25,7 +25,6 @@ def log(message):
 
 def populateEq(line):
     equals = line[10:].split(" ")
-    # TODO may be able to do this with just regex, no splitting required
     if len(equals) == 1:
         x = re.search("^[\w\\\=]+$", equals[0])
         if not x:
@@ -76,6 +75,8 @@ def populateQuant(line):
     return(quants)
 
 def populatePred(line):
+    if len(line) == 11:
+        return({})
     entries = line[12:].split(" ")
     if len(entries) == 0:
         print("No predicates defined.")
@@ -91,7 +92,10 @@ def populatePred(line):
             if num.isdigit():
                 arity = int(num)
                 if arity > 0:
-                    predicates[j[:y.span()[0]]] = arity
+                    if j[:y.span()[0]] not in predicates:
+                        predicates[j[:y.span()[0]]] = arity
+                    else:
+                        log(f"ERROR: Predicate {j[:y.span()[0]]} already defined.")
                 else:
                     log(f"ERROR: Arity {num} of predicate {j} is an integer less than 1.")
             else:
@@ -99,8 +103,9 @@ def populatePred(line):
     return(predicates)
 
 def populateVar(line):
+    if len(line) == 10:
+        return([])
     entries = line[11:].split(" ")
-    ## TODO make this a regex of "setName: followed by 0+ spaces" to check for empty string
     if len(entries) == 0:
         print("No variables defined.")
         return
@@ -114,6 +119,8 @@ def populateVar(line):
     return(variables)
 
 def populateConst(line):
+    if len(line) == 10:
+        return([])
     entries = line[11:].split(" ")
     if len(entries) == 0:
         print("No constants defined.")
@@ -137,10 +144,13 @@ if len(sys.argv) != 2:
 filename = sys.argv[1]
 path = pathlib.Path.cwd() / filename
 
-with open(path,"r") as f:
-    content = []
-    for line in f:
-        content.append(line)
+try:
+    with open(path,"r") as f:
+        content = []
+        for line in f:
+            content.append(line)
+except:
+    log(f"ERROR: Couldn't open input file {filename}")
 
 if not content:
     log("ERROR: Empty file")
@@ -166,7 +176,7 @@ constInd = 0
 predInd = 0
 formInd = 0
 
-justFormula = ["" for x in range(length)]
+formulaLines = [0,[]]
 
 for i in range(length):
     if content[i][0:9] == "equality:":
@@ -204,9 +214,9 @@ for i in range(length):
             log(f"ERROR: Formula beginning defined on more than one line in input file.")
         formSeen = True
         formInd = i
-        justFormula[i] = content[i]
+        formulaLines[0] = i
     else:
-        justFormula[i] = content[i]
+        formulaLines[1].append(i)
 
 if not eqSeen:
     log(f"ERROR: Equality undefined.")
@@ -223,30 +233,17 @@ elif not predSeen:
 elif not formSeen:
     log(f"ERROR: Formula undefined.")
 
-# TODO test the above undefined and multi define catching
-
-# TODO Formula lines need to be contiguous
-
-'''
-lastLine = 0
-for i in range(length):
-    if justFormula[i] != "":
-        if i > lastLine:
-            lastLine = i
-
-if lastLine = formInd:
-    if length([x for x in justFormula if x != ""]) != 1:
-        log(f"ERROR: Formula beginning defined on more than one line in input file.")
-
-    else:
-        searchIndex = i
-        if searchIndex == 0:
-        log(f"ERROR: The first line of your file must be a definition of a set or the beginning of a formula.")
-        while searchIndex != formInd:
-            searchIndex -= 1
-            if searchIndex != formInd:
-                if searchIndex == eqInd or searchIndex == connInd or searchIndex == quantInd or searchIndex == connInd or
-'''
+if len(formulaLines[1]) > 0:
+    formulaLines[1].sort()
+    for x in formulaLines[1]:
+        if x < formulaLines[0]:
+            log(f"ERROR: File incorrectly defined - unrecognised line {x}")
+    if len(formulaLines) > 1:
+        for x in range(len(formulaLines[1])-1):
+                if formulaLines[1][x+1] > formulaLines[1][x]+1:
+                    log(f"ERROR: File incorrectly defined - unrecognised line {formulaLines[1][x+1]}")
+formulaLines[1].append(formulaLines[0])
+formulaLines[1].sort()
 
 print("FILE CONTENTS:\n")
 
@@ -308,8 +305,6 @@ constString = " ".join([x for x in constants])
 print(f"Constants:\n{constString}\n")
 constants = set(constants)
 
-# TODO fix allowing two same-name different-arity predicates (this is a problem in the population function, because we have a dictionary that just updates the arity of the previously-seen name)
-
 predicates = populatePred(content[predInd])
 for x in predicates:
     if x not in forbiddenNames:
@@ -319,7 +314,9 @@ for x in predicates:
 predString = " ".join([f"{x} (arity {predicates[x]})" for x in predicates])
 print(f"Predicates:\n{predString}\n")
 
-formula = "".join([content[6],content[7]])[9:]
+formulaContent = [content[x] for x in range(length) if x in formulaLines[1]]
+
+formula = "".join(formulaContent)[9:]
 formula = formula.replace("("," ( ")
 formula = formula.replace(")"," ) ")
 formula = formula.replace(","," , ")
@@ -327,13 +324,10 @@ formula = " ".join(formula.split())
 print(f"Formula:\n{formula}\n")
 
 tokens = formula.split(" ")
-print(f"Token stream: {tokens}")
 
-##################################
+################################
 ####### PRINTING GRAMMAR #######
-##################################
-
-## TODO Make sure it handles empty var/const/pred
+################################
 
 grammar = []
 grammar.append("Non-Terminal Symbols:\n")
@@ -362,22 +356,31 @@ for x in connectives:
 connProds = connProds[:-3]
 
 constProds = f""
-for x in constants:
-    constProds += f"{x} | "
-constProds = constProds[:-3]
+if not constants:
+    constProds += "Empty String"
+else:
+    for x in constants:
+        constProds += f"{x} | "
+    constProds = constProds[:-3]
 
 varProds = f""
-for x in variables:
-    varProds += f"{x} | "
-varProds = varProds[:-3]
+if not variables:
+    varProds += "Empty String"
+else:
+    for x in variables:
+        varProds += f"{x} | "
+    varProds = varProds[:-3]
 
 predProds = f""
-for key in predicates:
-    predProds += f"{key}("
-    v = ["V" for x in range(predicates[key])]
-    predProds += ",".join(v)
-    predProds += ") | "
-predProds = predProds[:-3]
+if not predicates:
+    predProds += "Empty String"
+else:
+    for key in predicates:
+        predProds += f"{key}("
+        v = ["V" for x in range(predicates[key])]
+        predProds += ",".join(v)
+        predProds += ") | "
+    predProds = predProds[:-3]
 
 grammar.append(f"Q -> {quantProds}\n")
 grammar.append(f"L -> {connProds}\n")
@@ -399,150 +402,193 @@ except:
 ####### PARSING TOKEN STREAM #######
 ####################################
 
-## TODO: Make unique IDs either by making non-terminals have a forbidden char, making a new variable that ticks up and making separate addEdge() method, or alex's dictionary way
-
 class Parser():
     def __init__(self,tokens):
         self.laIndex = 0
         self.lookahead = tokens[self.laIndex]
         self.dot = gv.Digraph(comment="Parse Tree")
         self.label = 0
+        self.tokenDisplay = ""
 
     def labelNo(self):
         self.label += 1
         return self.label
 
+    def makeTokenDisplay(self,index):
+        for x in tokens[:self.laIndex+1]:
+            self.tokenDisplay += x
+            self.tokenDisplay += " "
+        self.tokenDisplay += " <-----"
+
     def formNT(self,parent):
-        self.dot.node(parent, "F")
+        self.dot.node(parent, "F", fontname="bold")
         if self.lookahead in quantifiers:
-            self.dot.edge(parent,f"Q{self.laIndex}")
-            self.quantNT(f"Q{self.laIndex}")
-            self.dot.edge(parent,f"V{self.laIndex}")
-            self.varNT(f"V{self.laIndex}")
-            self.dot.edge(parent,f"F{self.laIndex}")
-            self.formNT(f"F{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"Q{number}")
+            self.quantNT(f"Q{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"V{number}")
+            self.varNT(f"V{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"F{number}")
+            self.formNT(f"F{number}")
         elif self.lookahead == "(":
-            self.dot.edge(parent,f"({self.laIndex}")
-            self.match("(",f"({self.laIndex}")
-            self.dot.edge(parent,f"E{self.laIndex}")
-            self.exprNT(f"E{self.laIndex}")
-            self.dot.edge(parent,f"){self.laIndex}")
-            self.match(")",f"){self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"({number}")
+            self.match("(",f"({number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"E{number}")
+            self.exprNT(f"E{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"){number}")
+            self.match(")",f"){number}")
         elif self.lookahead == negation:
-            self.dot.edge(parent,f"{negation}{self.laIndex}")
-            self.match(negation,f"{negation}{self.laIndex}")
-            self.dot.edge(parent,f"F{self.laIndex}")
-            self.formNT(f"F{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"{negation}{number}")
+            self.match(negation,f"{negation}{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"F{number}")
+            self.formNT(f"F{number}")
         elif self.lookahead in predicates:
-            self.dot.edge(parent,f"P{self.laIndex}")
-            self.predNT(f"P{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"P{number}")
+            self.predNT(f"P{number}")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a quantifier, open bracket, negation or predicate, consistent with F's production rules, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be a quantifier, open bracket, negation or predicate, consistent with F's production rules, but encountered {self.lookahead}.")
             
     def exprNT(self,parent):
-        self.dot.node(parent, "E")
+        self.dot.node(parent, "E", fontname="bold")
         if self.lookahead in constants or self.lookahead in variables:
-            self.dot.edge(parent,f"T{self.laIndex}")
-            self.termNT(f"T{self.laIndex}")
-            self.dot.edge(parent,f"{equality}{self.laIndex}")
-            self.match(equality,f"{equality}{self.laIndex}")
-            self.dot.edge(parent,f"T{self.laIndex}")
-            self.termNT(f"T{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"T{number}")
+            self.termNT(f"T{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"{equality}{number}")
+            self.match(equality,f"{equality}{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"T{number}")
+            self.termNT(f"T{number}")
         elif self.lookahead in quantifiers or self.lookahead == "(" or self.lookahead == negation or self.lookahead in predicates:
-            self.dot.edge(parent,f"F{self.laIndex}")
-            self.formNT(f"F{self.laIndex}")
-            self.dot.edge(parent,f"L{self.laIndex}")
-            self.logNT(f"L{self.laIndex}")
-            self.dot.edge(parent,f"F{self.laIndex}")
-            self.formNT(f"F{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"F{number}")
+            self.formNT(f"F{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"L{number}")
+            self.logNT(f"L{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"F{number}")
+            self.formNT(f"F{number}")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a quantifier, open bracket, negation, predicate, constant or variable, consistent with E's production rules, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be a quantifier, open bracket, negation, predicate, constant or variable, consistent with E's production rules, but encountered {self.lookahead}.")
 
     def termNT(self,parent):
-        self.dot.node(parent, "T")
+        self.dot.node(parent, "T", fontname="bold")
         if self.lookahead in constants:
-            self.dot.edge(parent,f"C{self.laIndex}")
-            self.constNT(f"C{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"C{number}")
+            self.constNT(f"C{number}")
         elif self.lookahead in variables:
-            self.dot.edge(parent,f"V{self.laIndex}")
-            self.varNT(f"V{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"V{number}")
+            self.varNT(f"V{number}")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a constant or variable, consistent with T's production rules, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be a constant or variable, consistent with T's production rules, but encountered {self.lookahead}.")
 
     def quantNT(self,parent):
-        self.dot.node(parent, "Q")
+        self.dot.node(parent, "Q", fontname="bold")
         if self.lookahead in quantifiers:
-            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
-            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"{self.lookahead}{number}")
+            self.match(self.lookahead,f"{self.lookahead}{number}")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a quantifier ({quantString}), consistent with Q's production rules, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be a quantifier ({quantString}), consistent with Q's production rules, but encountered {self.lookahead}.")
 
     def logNT(self,parent):
-        self.dot.node(parent, "L")
+        self.dot.node(parent, "L", fontname="bold")
         if self.lookahead in connectives:
-            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
-            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"{self.lookahead}{number}")
+            self.match(self.lookahead,f"{self.lookahead}{number}")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a binary connective ({connString}), consistent with L's production rules, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be a binary connective ({connString}), consistent with L's production rules, but encountered {self.lookahead}.")
 
     def constNT(self,parent):
-        self.dot.node(parent, "C")
+        self.dot.node(parent, "C", fontname="bold")
         if self.lookahead in constants:
-            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
-            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"{self.lookahead}{number}")
+            self.match(self.lookahead,f"{self.lookahead}{number}")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a constant, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be a constant, but encountered {self.lookahead}.")
 
     def varNT(self,parent):
-        self.dot.node(parent, "V")
+        self.dot.node(parent, "V", fontname="bold")
         if self.lookahead in variables:
-            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
-            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"{self.lookahead}{number}")
+            self.match(self.lookahead,f"{self.lookahead}{number}")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a variable, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be a variable, but encountered {self.lookahead}.")
 
     def predNT(self,parent):
-        self.dot.node(parent, "P")
+        self.dot.node(parent, "P", fontname="bold")
         if self.lookahead in predicates:
             varCount = predicates[self.lookahead] 
-            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
-            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
-            self.dot.edge(parent,f"({self.laIndex}")
-            self.match("(",f"({self.laIndex}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"{self.lookahead}{number}")
+            self.match(self.lookahead,f"{self.lookahead}{number}")
+            number = self.labelNo()
+            self.dot.edge(parent,f"({number}")
+            self.match("(",f"({number}")
             if varCount == 1:
-                self.dot.edge(parent,f"V{self.laIndex}")
-                self.varNT(f"V{self.laIndex}")
-                self.dot.edge(parent,f"){self.laIndex}")
-                self.match(")",f"){self.laIndex}")
+                number = self.labelNo()
+                self.dot.edge(parent,f"V{number}")
+                self.varNT(f"V{number}")
+                number = self.labelNo()
+                self.dot.edge(parent,f"){number}")
+                self.match(")",f"){number}")
             elif varCount >= 2:
                 for i in range(varCount-1):
-                    self.dot.edge(parent,f"V{self.laIndex}")
-                    self.varNT(f"V{self.laIndex}")
-                    self.dot.edge(parent,f",{self.laIndex}")
-                    self.match(",",f",{self.laIndex}")
-                self.dot.edge(parent,f"V{self.laIndex}")
-                self.varNT(f"V{self.laIndex}")
-                self.dot.edge(parent,f"){self.laIndex}")
-                self.match(")",f"){self.laIndex}")
+                    number = self.labelNo()
+                    self.dot.edge(parent,f"V{number}")
+                    self.varNT(f"V{number}")
+                    number = self.labelNo()
+                    self.dot.edge(parent,f",{number}")
+                    self.match(",",f",{number}")
+                number = self.labelNo()
+                self.dot.edge(parent,f"V{number}")
+                self.varNT(f"V{number}")
+                number = self.labelNo()
+                self.dot.edge(parent,f"){number}")
+                self.match(")",f"){number}")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a predicate, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be a predicate, but encountered {self.lookahead}.")
 
     def match(self,t,parent):
         if self.lookahead == t:
-            self.dot.node(parent, t)
+            self.dot.node(parent, t.replace("\\","\\\\"))
             if self.laIndex != len(tokens)-1:
                 self.laIndex += 1
                 self.lookahead = tokens[self.laIndex]
             else:
                 print("Parser has reached end of token stream")
         else:
-            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be {t}, but encountered {self.lookahead}.")
+            self.makeTokenDisplay(self.laIndex+1)
+            log(f"ERROR:\n\nSymbol Number {self.laIndex+1}\n{self.tokenDisplay}\n\nParser expected this symbol to be {t}, but encountered {self.lookahead}.")
         
     def parse(self):
         self.formNT("origin")
 
 p = Parser(tokens)
+print("Input parsing beginning now")
 p.parse()
-#print(p.dot.source)
-p.dot.render("parsetree.gv.pdf", view=True)
+p.dot.render("ParseTree")
 log(f"Successfully parsed input {filename}")

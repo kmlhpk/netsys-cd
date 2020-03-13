@@ -1,0 +1,80 @@
+// Parse Tree
+digraph {
+	origin [label=F fontname=bold]
+	origin -> Q1
+	Q1 [label=Q fontname=bold]
+	Q1 -> ThereIsOne2
+	ThereIsOne2 [label=ThereIsOne]
+	origin -> V3
+	V3 [label=V fontname=bold]
+	V3 -> super4
+	super4 [label=super]
+	origin -> F5
+	F5 [label=F fontname=bold]
+	F5 -> Q6
+	Q6 [label=Q fontname=bold]
+	Q6 -> EveryOne7
+	EveryOne7 [label=EveryOne]
+	F5 -> V8
+	V8 [label=V fontname=bold]
+	V8 -> var19
+	var19 [label=var1]
+	F5 -> F10
+	F10 [label=F fontname=bold]
+	F10 -> "(11"
+	"(11" [label="("]
+	F10 -> E12
+	E12 [label=E fontname=bold]
+	E12 -> F13
+	F13 [label=F fontname=bold]
+	F13 -> P14
+	P14 [label=P fontname=bold]
+	P14 -> P15
+	P15 [label=P]
+	P14 -> "(16"
+	"(16" [label="("]
+	P14 -> V17
+	V17 [label=V fontname=bold]
+	V17 -> var118
+	var118 [label=var1]
+	P14 -> ",19"
+	",19" [label=","]
+	P14 -> V20
+	V20 [label=V fontname=bold]
+	V20 -> super21
+	super21 [label=super]
+	P14 -> ")22"
+	")22" [label=")"]
+	E12 -> L23
+	L23 [label=L fontname=bold]
+	L23 -> ARROW24
+	ARROW24 [label=ARROW]
+	E12 -> F25
+	F25 [label=F fontname=bold]
+	F25 -> NOPE26
+	NOPE26 [label=NOPE]
+	F25 -> F27
+	F27 [label=F fontname=bold]
+	F27 -> "(28"
+	"(28" [label="("]
+	F27 -> E29
+	E29 [label=E fontname=bold]
+	E29 -> T30
+	T30 [label=T fontname=bold]
+	T30 -> V31
+	V31 [label=V fontname=bold]
+	V31 -> super32
+	super32 [label=super]
+	E29 -> is33
+	is33 [label=is]
+	E29 -> T34
+	T34 [label=T fontname=bold]
+	T34 -> C35
+	C35 [label=C fontname=bold]
+	C35 -> duper36
+	duper36 [label=duper]
+	F27 -> ")37"
+	")37" [label=")"]
+	F10 -> ")38"
+	")38" [label=")"]
+}

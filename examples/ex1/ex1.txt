@@ -1,0 +1,7 @@
+variables: var1 super
+constants: const1 duper
+predicates: P[2] max[13]
+equality: is
+connectives: A V ARROW DOUBLEARROW NOPE
+quantifiers: ThereIsOne EveryOne
+formula: ThereIsOne super EveryOne var1 (P(var1,super) ARROW NOPE (super is duper) )

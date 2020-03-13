@@ -1,0 +1,15 @@
+Non-Terminal Symbols:
+F E T Q L C V P
+
+Terminal Symbols:
+( ) , is NOPE var1 super const1 duper P max EveryOne ThereIsOne A ARROW DOUBLEARROW V
+
+Production Rules:
+F -> (E) | Q V F | NOPE F | P
+E -> T is T | F L F
+T -> C | V
+Q -> EveryOne | ThereIsOne
+L -> A | ARROW | DOUBLEARROW | V
+C -> duper | const1
+V -> super | var1
+P -> P(V,V) | max(V,V,V,V,V,V,V,V,V,V,V,V,V)
