@@ -1,10 +1,11 @@
 import sys
 import pathlib
 import re
+import graphviz
 
-####################################
-####### FUNCTION DEFINITIONS #######
-####################################
+###################################################
+####### FILE INGESTION FUNCTION DEFINITIONS #######
+###################################################
 
 def populateEq(line):
     equals = line[10:].split(" ")
@@ -125,9 +126,9 @@ def populateConst(line):
             constants.append(x.group())
     return(constants)
 
-##############################
-####### FILE INGESTION #######
-##############################
+########################################
+####### FILE INGESTION MAIN FLOW #######
+########################################
 
 if len(sys.argv) != 2:
     print("ERROR: Invalid amount of arguments. Please run the program including your filename as a parameter, in the format of 'python parser.py filename.ext'")
@@ -238,7 +239,10 @@ elif not formSeen:
     print(f"ERROR: Formula undefined.")
     sys.exit(1)
 
+# TODO test the above undefined and multi define catching
+
 # TODO Formula lines need to be contiguous
+
 '''
 lastLine = 0
 for i in range(length):
@@ -287,9 +291,6 @@ else:
     print(f"ERROR: The identifier {negation} has been used more than once. Please ensure all identifiers are unique.")
     sys.exit(1)
 print(f"Negation Symbol:\n{negation}\n")
-#a = set()
-#a.add(negation)
-#negation = a
 
 equality = populateEq(content[eqInd])
 if equality not in forbiddenNames:
@@ -298,9 +299,6 @@ else:
     print(f"ERROR: The identifier {equality} has been used more than once. Please ensure all identifiers are unique.")
     sys.exit(1)
 print(f"Equality Symbol:\n{equality}\n")
-#a = set()
-#a.add(equality)
-#equality = a
 
 quantifiers = populateQuant(content[quantInd])
 for x in quantifiers:
@@ -421,7 +419,139 @@ except:
     for x in grammar:
         print(x)
 
-####################################
-####### PARSING TOKEN STREAM #######
-####################################
+############################################
+####### PARSING FUNCTION DEFINITIONS #######
+############################################
+
+def formNT():
+    print("Choosing from F")
+    if lookahead in quantifiers:
+        print("Chose QVF")
+        quantNT()
+        varNT()
+        formNT()
+        print("Fin QVF")
+    elif lookahead == "(":
+        print("Chose (E)")
+        match("(")
+        exprNT()
+        match(")")
+        print("Fin (E)")
+    elif lookahead == negation:
+        print("Chose !F")
+        match(negation)
+        formNT()
+        print("Fin !F")
+    elif lookahead in predicates:
+        print("Chose P")
+        predNT()
+        print("Fin P")
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a quantifier, open bracket, negation or predicate, consistent with F's production rules, but encountered {lookahead}.")
+        sys.exit(1)
+        
+def exprNT():
+    print("Choosing from E")
+    if lookahead in constants or lookahead in variables:
+        print("Chose T=T")
+        termNT()
+        match(equality)
+        termNT()
+        print("Fin T=T")
+    elif lookahead in quantifiers or lookahead == "(" or lookahead == negation or lookahead in predicates:
+        print("Chose FLF")
+        formNT()
+        logNT()
+        formNT()
+        print("Fin FLF")
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a quantifier, open bracket, negation, predicate, constant or variable, consistent with E's production rules, but encountered {lookahead}.")
+        sys.exit(1)
+
+def termNT():
+    print("Choosing from T")
+    if lookahead in constants:
+        print("Chose C")
+        constNT()
+        print("Fin C")
+    elif lookahead in variables:
+        print("Chose V")
+        varNT()
+        print("Fin V")
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a constant or variable, consistent with T's production rules, but encountered {lookahead}.")
+        sys.exit(1)
+
+def quantNT():
+    print("Choosing from Q")
+    if lookahead in quantifiers:
+        match(lookahead)
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a quantifier ({quantString}), consistent with Q's production rules, but encountered {lookahead}.")
+        sys.exit(1)
+
+def logNT():
+    print("Choosing from L")
+    if lookahead in connectives:
+        match(lookahead)
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a binary connective ({connString}), consistent with L's production rules, but encountered {lookahead}.")
+        sys.exit(1)
+
+def constNT():
+    print("Choosing from C")
+    if lookahead in constants:
+        match(lookahead)
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a constant, but encountered {lookahead}.")
+        sys.exit(1)
+
+def varNT():
+    print("Choosing from V")
+    if lookahead in variables:
+        match(lookahead)
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a variable, but encountered {lookahead}.")
+        sys.exit(1)
+
+def predNT():
+    print("Choosing from P")
+    if lookahead in predicates:
+        varCount = predicates[lookahead] 
+        match(lookahead)
+        match("(")
+        if varCount == 1:
+            varNT()
+            match(")")
+        elif varCount >= 2:
+            for i in range(varCount-1):
+                varNT()
+                match(",")
+            varNT()
+            match(")")
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a predicate, but encountered {lookahead}.")
+        sys.exit(1)
+
+def match(t):
+    global lookahead
+    global laIndex
+    print(f"Examining symbol {lookahead} at position {laIndex}, expecting {t}")
+    if lookahead == t:
+        if laIndex != len(tokens)-1:
+            laIndex += 1
+            lookahead = tokens[laIndex]
+        else:
+            print("Parser has reached end of token stream")
+    else:
+        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be {t}, but encountered {lookahead}.")
+        sys.exit(1)
+
+#################################
+####### PARSING MAIN FLOW #######
+#################################
+
+laIndex = 0
+lookahead = tokens[laIndex]
+formNT()
 

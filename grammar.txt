@@ -2,14 +2,14 @@ Non-Terminal Symbols:
 F E T Q L C V P
 
 Terminal Symbols:
-( ) , = \neg w x y z C D P Q R \forall \exists \land \lor \iff \implies
+( ) , = \neg w x y z C D P Q R \exists \forall \land \iff \implies \lor
 
 Production Rules:
 F -> (E) | Q V F | \neg F | P
 E -> T = T | F L F
 T -> C | V
-Q -> \forall | \exists
-L -> \land | \lor | \iff | \implies
+Q -> \exists | \forall
+L -> \land | \iff | \implies | \lor
 C -> C | D
-V -> w | y | x | z
+V -> w | y | z | x
 P -> P(V,V) | Q(V) | R(V,V,V,V,V)
