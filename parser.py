@@ -1,7 +1,23 @@
 import sys
 import pathlib
 import re
-import graphviz
+import graphviz as gv
+
+################################
+####### LOGGING FUNCTION #######
+################################
+
+def log(message):
+    try:
+        logPath = pathlib.Path.cwd() / "log.log"
+        with open(logPath,"w") as f:
+            f.write(message)
+        print("Message successfully printed to ./log.log - exiting program.")
+    except:
+        print("ERROR: Could not print grammar to ./log.log - printing to console instead.")
+        print(message)
+        print("Exiting program.")
+    sys.exit()
 
 ###################################################
 ####### FILE INGESTION FUNCTION DEFINITIONS #######
@@ -13,16 +29,13 @@ def populateEq(line):
     if len(equals) == 1:
         x = re.search("^[\w\\\=]+$", equals[0])
         if not x:
-            print(f"ERROR: Equality symbol {equals[0]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores, backslashes or = only. Example: \\my_eq=")
-            sys.exit(1)
+            log(f"ERROR: Equality symbol {equals[0]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores, backslashes or = only. Example: \\my_eq=")
         else:
             return x.group()
     elif len(equals) == 0:
-        print("ERROR: Equality symbol undefined")
-        sys.exit(1)
+        log("ERROR: Equality symbol undefined")
     else:
-        print(f"ERROR: {len(equals)} equality symbols found, please supply only 1")
-        sys.exit(1)
+        log(f"ERROR: {len(equals)} equality symbols found, please supply only 1")
     
 def populateConn(line):
     entries = line[13:].split(" ")
@@ -32,22 +45,18 @@ def populateConn(line):
         for i in range(4):
             x = re.search("^[\w\\\]+$", entries[i])
             if not x:
-                print(f"ERROR: Connective {entries[i]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only. Example: \\my_conn")
-                sys.exit(1)
+                log(f"ERROR: Connective {entries[i]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only. Example: \\my_conn")
             else:
                 conns.append(x.group())
         n = re.search("^[\w\\\]+$",entries[4])
         if not n:
-            print(f"ERROR: Connective {entries[4]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only.")
-            sys.exit(1)
+            log(f"ERROR: Connective {entries[4]} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only.")
         else:
             neg = entries[4]
     elif len(entries) == 0:
-        print("ERROR: Connectives undefined")
-        sys.exit(1)
+        log("ERROR: Connectives undefined")
     else: 
-        print(f"ERROR: {len(entries)} connectives found. Please supply exactly 5, separated by spaces, in the following order: AND OR IMPLIES IFF NOT")
-        sys.exit(1)
+        log(f"ERROR: {len(entries)} connectives found. Please supply exactly 5, separated by spaces, in the following order: And Or Implies Iff Not")
     return(conns,neg)
 
 def populateQuant(line):
@@ -57,16 +66,13 @@ def populateQuant(line):
         for q in entries:
             x = re.search("^[\w\\\]+$", q)
             if not x:
-                print(f"ERROR: Quantifier {q} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only. Example: \\my_quant")
-                sys.exit(1)
+                log(f"ERROR: Quantifier {q} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters, underscores or backslashes only. Example: \\my_quant")
             else:
                 quants.append(x.group())
     elif len(entries) == 0:
-        print("ERROR: Quantifiers undefined")
-        sys.exit(1)
+        log("ERROR: Quantifiers undefined")
     else: 
-        print(f"ERROR: {len(entries)} quantifiers found. Please supply exactly 2, separated by spaces, in the following order: Exists ForAll")
-        sys.exit(1)
+        log(f"ERROR: {len(entries)} quantifiers found. Please supply exactly 2, separated by spaces, in the following order: Exists ForAll")
     return(quants)
 
 def populatePred(line):
@@ -78,8 +84,7 @@ def populatePred(line):
     for j in entries:
         x = re.search("^\w+\[\d+\]$",j)
         if not x:
-            print(f"ERROR: Predicate {j} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters or underscores only, followed immediately by an integer greater than 0 enclosed in square brackets. Example: my_pred[5]")
-            sys.exit(1)
+            log(f"ERROR: Predicate {j} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters or underscores only, followed immediately by an integer greater than 0 enclosed in square brackets. Example: my_pred[5]")
         else:
             y = re.search("\[\d+\]",j)
             num = y.group()[1:][:-1]
@@ -88,11 +93,9 @@ def populatePred(line):
                 if arity > 0:
                     predicates[j[:y.span()[0]]] = arity
                 else:
-                    print(f"ERROR: Arity {num} of predicate {j} is an integer less than 1.")
-                    sys.exit(1)
+                    log(f"ERROR: Arity {num} of predicate {j} is an integer less than 1.")
             else:
-                print(f"ERROR: Arity {num} of predicate {j} is not an integer.")
-                sys.exit(1)
+                log(f"ERROR: Arity {num} of predicate {j} is not an integer.")
     return(predicates)
 
 def populateVar(line):
@@ -105,8 +108,7 @@ def populateVar(line):
     for j in entries:
         x = re.search("^\w+$",j)
         if not x:
-            print(f"ERROR: Variable {j} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters or underscores only. Example: my_var")
-            sys.exit(1)
+            log(f"ERROR: Variable {j} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters or underscores only. Example: my_var")
         else:
             variables.append(x.group())
     return(variables)
@@ -120,8 +122,7 @@ def populateConst(line):
     for j in entries:
         x = re.search("^\w+$",j)
         if not x:
-            print(f"ERROR: Constant {j} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters or underscores only. Example: my_const")
-            sys.exit(1)
+            log(f"ERROR: Constant {j} is formatted in an invalid way. Ensure it is comprised of alphanumeric characters or underscores only. Example: my_const")
         else:
             constants.append(x.group())
     return(constants)
@@ -131,8 +132,7 @@ def populateConst(line):
 ########################################
 
 if len(sys.argv) != 2:
-    print("ERROR: Invalid amount of arguments. Please run the program including your filename as a parameter, in the format of 'python parser.py filename.ext'")
-    sys.exit(1)
+    log("ERROR: Invalid amount of arguments. Please run the program including your filename as a parameter, in the format of 'python parser.py filename.ext'")
 
 filename = sys.argv[1]
 path = pathlib.Path.cwd() / filename
@@ -143,14 +143,12 @@ with open(path,"r") as f:
         content.append(line)
 
 if not content:
-    print("ERROR: Empty file")
-    sys.exit(1)
+    log("ERROR: Empty file")
 
 length = len(content)
 
 if length < 7:
-    print(f"ERROR: A file needs at least 7 lines to be valid, but {filename} has {length}.")
-    sys.exit(1)
+    log(f"ERROR: A file needs at least 7 lines to be valid, but {filename} has {length}.")
 
 eqSeen = False
 connSeen = False
@@ -173,44 +171,37 @@ justFormula = ["" for x in range(length)]
 for i in range(length):
     if content[i][0:9] == "equality:":
         if eqSeen:
-            print(f"ERROR: Equality defined on more than one line in input file.")
-            sys.exit(1)
+            log(f"ERROR: Equality defined on more than one line in input file.")
         eqSeen = True
         eqInd = i
     elif content[i][0:12] == "connectives:":
         if connSeen:
-            print(f"ERROR: Connectives defined on more than one line in input file.")
-            sys.exit(1)
+            log(f"ERROR: Connectives defined on more than one line in input file.")
         connSeen = True
         connInd = i
     elif content[i][0:12] == "quantifiers:":
         if quantSeen:
-            print(f"ERROR: Quantifiers defined on more than one line in input file.")
-            sys.exit(1)
+            log(f"ERROR: Quantifiers defined on more than one line in input file.")
         quantSeen = True
         quantInd = i
     elif content[i][0:10] == "variables:":
         if varSeen:
-            print(f"ERROR: Variables defined on more than one line in input file.")
-            sys.exit(1)
+            log(f"ERROR: Variables defined on more than one line in input file.")
         varSeen = True
         varInd = i
     elif content[i][0:10] == "constants:":
         if constSeen:
-            print(f"ERROR: Constants defined on more than one line in input file.")
-            sys.exit(1)
+            log(f"ERROR: Constants defined on more than one line in input file.")
         constSeen = True
         constInd = i
     elif content[i][0:11] == "predicates:":
         if predSeen:
-            print(f"ERROR: Predicates defined on more than one line in input file.")
-            sys.exit(1)
+            log(f"ERROR: Predicates defined on more than one line in input file.")
         predSeen = True
         predInd = i
     elif content[i][0:8] == "formula:":
         if formSeen:
-            print(f"ERROR: Formula beginning defined on more than one line in input file.")
-            sys.exit(1)
+            log(f"ERROR: Formula beginning defined on more than one line in input file.")
         formSeen = True
         formInd = i
         justFormula[i] = content[i]
@@ -218,26 +209,19 @@ for i in range(length):
         justFormula[i] = content[i]
 
 if not eqSeen:
-    print(f"ERROR: Equality undefined.")
-    sys.exit(1)
+    log(f"ERROR: Equality undefined.")
 elif not connSeen:
-    print(f"ERROR: Connectives undefined.")
-    sys.exit(1)
+    log(f"ERROR: Connectives undefined.")
 elif not quantSeen:
-    print(f"ERROR: Quantifiers undefined.")
-    sys.exit(1)
+    log(f"ERROR: Quantifiers undefined.")
 elif  not varSeen:
-    print(f"ERROR: Variables undefined.")
-    sys.exit(1)
+    log(f"ERROR: Variables undefined.")
 elif not constSeen:
-    print(f"ERROR: Constants undefined.")
-    sys.exit(1)
+    log(f"ERROR: Constants undefined.")
 elif not predSeen:
-    print(f"ERROR: Predicates undefined.")
-    sys.exit(1)
+    log(f"ERROR: Predicates undefined.")
 elif not formSeen:
-    print(f"ERROR: Formula undefined.")
-    sys.exit(1)
+    log(f"ERROR: Formula undefined.")
 
 # TODO test the above undefined and multi define catching
 
@@ -252,14 +236,12 @@ for i in range(length):
 
 if lastLine = formInd:
     if length([x for x in justFormula if x != ""]) != 1:
-        print(f"ERROR: Formula beginning defined on more than one line in input file.")
-        sys.exit(1)
+        log(f"ERROR: Formula beginning defined on more than one line in input file.")
 
     else:
         searchIndex = i
         if searchIndex == 0:
-        print(f"ERROR: The first line of your file must be a definition of a set or the beginning of a formula.")
-        sys.exit(1)
+        log(f"ERROR: The first line of your file must be a definition of a set or the beginning of a formula.")
         while searchIndex != formInd:
             searchIndex -= 1
             if searchIndex != formInd:
@@ -279,8 +261,7 @@ for x in connectives:
     if x not in forbiddenNames:
         forbiddenNames.add(x)
     else: 
-        print(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
-        sys.exit(1)
+        log(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
 print(f"Binary Connectives (And, Or, Implies, Iff):\n{connectives[0]} {connectives[1]} {connectives[2]} {connectives[3]}\n")
 connectives = set(connectives)
 
@@ -288,16 +269,14 @@ negation = connTuple[1]
 if negation not in forbiddenNames:
     forbiddenNames.add(negation)
 else: 
-    print(f"ERROR: The identifier {negation} has been used more than once. Please ensure all identifiers are unique.")
-    sys.exit(1)
+    log(f"ERROR: The identifier {negation} has been used more than once. Please ensure all identifiers are unique.")
 print(f"Negation Symbol:\n{negation}\n")
 
 equality = populateEq(content[eqInd])
 if equality not in forbiddenNames:
     forbiddenNames.add(equality)
 else: 
-    print(f"ERROR: The identifier {equality} has been used more than once. Please ensure all identifiers are unique.")
-    sys.exit(1)
+    log(f"ERROR: The identifier {equality} has been used more than once. Please ensure all identifiers are unique.")
 print(f"Equality Symbol:\n{equality}\n")
 
 quantifiers = populateQuant(content[quantInd])
@@ -305,8 +284,7 @@ for x in quantifiers:
     if x not in forbiddenNames:
         forbiddenNames.add(x)
     else: 
-        print(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
-        sys.exit(1)
+        log(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
 print(f"Quantifiers (Exists, ForAll):\n{quantifiers[0]} {quantifiers[1]}\n")
 quantifiers = set(quantifiers)
 
@@ -315,8 +293,7 @@ for x in variables:
     if x not in forbiddenNames:
         forbiddenNames.add(x)
     else: 
-        print(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
-        sys.exit(1)
+        log(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
 varString = " ".join([x for x in variables])
 print(f"Variables:\n{varString}\n")
 variables = set(variables)
@@ -326,8 +303,7 @@ for x in constants:
     if x not in forbiddenNames:
         forbiddenNames.add(x)
     else: 
-        print(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
-        sys.exit(1)
+        log(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
 constString = " ".join([x for x in constants])
 print(f"Constants:\n{constString}\n")
 constants = set(constants)
@@ -339,8 +315,7 @@ for x in predicates:
     if x not in forbiddenNames:
         forbiddenNames.add(x)
     else: 
-        print(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
-        sys.exit(1)
+        log(f"ERROR: The identifier {x} has been used more than once. Please ensure all identifiers are unique.")
 predString = " ".join([f"{x} (arity {predicates[x]})" for x in predicates])
 print(f"Predicates:\n{predString}\n")
 
@@ -352,7 +327,7 @@ formula = " ".join(formula.split())
 print(f"Formula:\n{formula}\n")
 
 tokens = formula.split(" ")
-#print(f"Token stream: {tokens}")
+print(f"Token stream: {tokens}")
 
 ##################################
 ####### PRINTING GRAMMAR #######
@@ -414,144 +389,160 @@ try:
     grammarPath = pathlib.Path.cwd() / "grammar.txt"
     with open(grammarPath,"w") as f:
         f.writelines(grammar)
+    print("Grammar successfully printed to ./grammar.txt")
 except:
     print("ERROR: Could not print grammar to ./grammar.txt - printing to console instead")
     for x in grammar:
         print(x)
 
-############################################
-####### PARSING FUNCTION DEFINITIONS #######
-############################################
+####################################
+####### PARSING TOKEN STREAM #######
+####################################
 
-def formNT():
-    print("Choosing from F")
-    if lookahead in quantifiers:
-        print("Chose QVF")
-        quantNT()
-        varNT()
-        formNT()
-        print("Fin QVF")
-    elif lookahead == "(":
-        print("Chose (E)")
-        match("(")
-        exprNT()
-        match(")")
-        print("Fin (E)")
-    elif lookahead == negation:
-        print("Chose !F")
-        match(negation)
-        formNT()
-        print("Fin !F")
-    elif lookahead in predicates:
-        print("Chose P")
-        predNT()
-        print("Fin P")
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a quantifier, open bracket, negation or predicate, consistent with F's production rules, but encountered {lookahead}.")
-        sys.exit(1)
-        
-def exprNT():
-    print("Choosing from E")
-    if lookahead in constants or lookahead in variables:
-        print("Chose T=T")
-        termNT()
-        match(equality)
-        termNT()
-        print("Fin T=T")
-    elif lookahead in quantifiers or lookahead == "(" or lookahead == negation or lookahead in predicates:
-        print("Chose FLF")
-        formNT()
-        logNT()
-        formNT()
-        print("Fin FLF")
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a quantifier, open bracket, negation, predicate, constant or variable, consistent with E's production rules, but encountered {lookahead}.")
-        sys.exit(1)
+## TODO: Make unique IDs either by making non-terminals have a forbidden char, making a new variable that ticks up and making separate addEdge() method, or alex's dictionary way
 
-def termNT():
-    print("Choosing from T")
-    if lookahead in constants:
-        print("Chose C")
-        constNT()
-        print("Fin C")
-    elif lookahead in variables:
-        print("Chose V")
-        varNT()
-        print("Fin V")
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a constant or variable, consistent with T's production rules, but encountered {lookahead}.")
-        sys.exit(1)
+class Parser():
+    def __init__(self,tokens):
+        self.laIndex = 0
+        self.lookahead = tokens[self.laIndex]
+        self.dot = gv.Digraph(comment="Parse Tree")
+        self.label = 0
 
-def quantNT():
-    print("Choosing from Q")
-    if lookahead in quantifiers:
-        match(lookahead)
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a quantifier ({quantString}), consistent with Q's production rules, but encountered {lookahead}.")
-        sys.exit(1)
+    def labelNo(self):
+        self.label += 1
+        return self.label
 
-def logNT():
-    print("Choosing from L")
-    if lookahead in connectives:
-        match(lookahead)
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a binary connective ({connString}), consistent with L's production rules, but encountered {lookahead}.")
-        sys.exit(1)
-
-def constNT():
-    print("Choosing from C")
-    if lookahead in constants:
-        match(lookahead)
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a constant, but encountered {lookahead}.")
-        sys.exit(1)
-
-def varNT():
-    print("Choosing from V")
-    if lookahead in variables:
-        match(lookahead)
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a variable, but encountered {lookahead}.")
-        sys.exit(1)
-
-def predNT():
-    print("Choosing from P")
-    if lookahead in predicates:
-        varCount = predicates[lookahead] 
-        match(lookahead)
-        match("(")
-        if varCount == 1:
-            varNT()
-            match(")")
-        elif varCount >= 2:
-            for i in range(varCount-1):
-                varNT()
-                match(",")
-            varNT()
-            match(")")
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be a predicate, but encountered {lookahead}.")
-        sys.exit(1)
-
-def match(t):
-    global lookahead
-    global laIndex
-    print(f"Examining symbol {lookahead} at position {laIndex}, expecting {t}")
-    if lookahead == t:
-        if laIndex != len(tokens)-1:
-            laIndex += 1
-            lookahead = tokens[laIndex]
+    def formNT(self,parent):
+        self.dot.node(parent, "F")
+        if self.lookahead in quantifiers:
+            self.dot.edge(parent,f"Q{self.laIndex}")
+            self.quantNT(f"Q{self.laIndex}")
+            self.dot.edge(parent,f"V{self.laIndex}")
+            self.varNT(f"V{self.laIndex}")
+            self.dot.edge(parent,f"F{self.laIndex}")
+            self.formNT(f"F{self.laIndex}")
+        elif self.lookahead == "(":
+            self.dot.edge(parent,f"({self.laIndex}")
+            self.match("(",f"({self.laIndex}")
+            self.dot.edge(parent,f"E{self.laIndex}")
+            self.exprNT(f"E{self.laIndex}")
+            self.dot.edge(parent,f"){self.laIndex}")
+            self.match(")",f"){self.laIndex}")
+        elif self.lookahead == negation:
+            self.dot.edge(parent,f"{negation}{self.laIndex}")
+            self.match(negation,f"{negation}{self.laIndex}")
+            self.dot.edge(parent,f"F{self.laIndex}")
+            self.formNT(f"F{self.laIndex}")
+        elif self.lookahead in predicates:
+            self.dot.edge(parent,f"P{self.laIndex}")
+            self.predNT(f"P{self.laIndex}")
         else:
-            print("Parser has reached end of token stream")
-    else:
-        print(f"ERROR: Symbol Number {laIndex} Parser expected next symbol to be {t}, but encountered {lookahead}.")
-        sys.exit(1)
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a quantifier, open bracket, negation or predicate, consistent with F's production rules, but encountered {self.lookahead}.")
+            
+    def exprNT(self,parent):
+        self.dot.node(parent, "E")
+        if self.lookahead in constants or self.lookahead in variables:
+            self.dot.edge(parent,f"T{self.laIndex}")
+            self.termNT(f"T{self.laIndex}")
+            self.dot.edge(parent,f"{equality}{self.laIndex}")
+            self.match(equality,f"{equality}{self.laIndex}")
+            self.dot.edge(parent,f"T{self.laIndex}")
+            self.termNT(f"T{self.laIndex}")
+        elif self.lookahead in quantifiers or self.lookahead == "(" or self.lookahead == negation or self.lookahead in predicates:
+            self.dot.edge(parent,f"F{self.laIndex}")
+            self.formNT(f"F{self.laIndex}")
+            self.dot.edge(parent,f"L{self.laIndex}")
+            self.logNT(f"L{self.laIndex}")
+            self.dot.edge(parent,f"F{self.laIndex}")
+            self.formNT(f"F{self.laIndex}")
+        else:
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a quantifier, open bracket, negation, predicate, constant or variable, consistent with E's production rules, but encountered {self.lookahead}.")
 
-#################################
-####### PARSING MAIN FLOW #######
-#################################
+    def termNT(self,parent):
+        self.dot.node(parent, "T")
+        if self.lookahead in constants:
+            self.dot.edge(parent,f"C{self.laIndex}")
+            self.constNT(f"C{self.laIndex}")
+        elif self.lookahead in variables:
+            self.dot.edge(parent,f"V{self.laIndex}")
+            self.varNT(f"V{self.laIndex}")
+        else:
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a constant or variable, consistent with T's production rules, but encountered {self.lookahead}.")
 
-laIndex = 0
-lookahead = tokens[laIndex]
-formNT()
+    def quantNT(self,parent):
+        self.dot.node(parent, "Q")
+        if self.lookahead in quantifiers:
+            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
+            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+        else:
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a quantifier ({quantString}), consistent with Q's production rules, but encountered {self.lookahead}.")
 
+    def logNT(self,parent):
+        self.dot.node(parent, "L")
+        if self.lookahead in connectives:
+            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
+            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+        else:
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a binary connective ({connString}), consistent with L's production rules, but encountered {self.lookahead}.")
+
+    def constNT(self,parent):
+        self.dot.node(parent, "C")
+        if self.lookahead in constants:
+            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
+            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+        else:
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a constant, but encountered {self.lookahead}.")
+
+    def varNT(self,parent):
+        self.dot.node(parent, "V")
+        if self.lookahead in variables:
+            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
+            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+        else:
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a variable, but encountered {self.lookahead}.")
+
+    def predNT(self,parent):
+        self.dot.node(parent, "P")
+        if self.lookahead in predicates:
+            varCount = predicates[self.lookahead] 
+            self.dot.edge(parent,f"{self.lookahead}{self.laIndex}")
+            self.match(self.lookahead,f"{self.lookahead}{self.laIndex}")
+            self.dot.edge(parent,f"({self.laIndex}")
+            self.match("(",f"({self.laIndex}")
+            if varCount == 1:
+                self.dot.edge(parent,f"V{self.laIndex}")
+                self.varNT(f"V{self.laIndex}")
+                self.dot.edge(parent,f"){self.laIndex}")
+                self.match(")",f"){self.laIndex}")
+            elif varCount >= 2:
+                for i in range(varCount-1):
+                    self.dot.edge(parent,f"V{self.laIndex}")
+                    self.varNT(f"V{self.laIndex}")
+                    self.dot.edge(parent,f",{self.laIndex}")
+                    self.match(",",f",{self.laIndex}")
+                self.dot.edge(parent,f"V{self.laIndex}")
+                self.varNT(f"V{self.laIndex}")
+                self.dot.edge(parent,f"){self.laIndex}")
+                self.match(")",f"){self.laIndex}")
+        else:
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be a predicate, but encountered {self.lookahead}.")
+
+    def match(self,t,parent):
+        if self.lookahead == t:
+            self.dot.node(parent, t)
+            if self.laIndex != len(tokens)-1:
+                self.laIndex += 1
+                self.lookahead = tokens[self.laIndex]
+            else:
+                print("Parser has reached end of token stream")
+        else:
+            log(f"ERROR: Symbol Number {self.laIndex} Parser expected next symbol to be {t}, but encountered {self.lookahead}.")
+        
+    def parse(self):
+        self.formNT("origin")
+
+p = Parser(tokens)
+p.parse()
+#print(p.dot.source)
+p.dot.render("parsetree.gv.pdf", view=True)
+log(f"Successfully parsed input {filename}")

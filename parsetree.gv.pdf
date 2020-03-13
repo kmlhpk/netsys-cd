@@ -1,0 +1,174 @@
+// Parse Tree
+digraph {
+	origin [label=F]
+	origin -> Q0
+	Q0 [label=Q]
+	Q0 -> "\\forall0"
+	"\\forall0" [label="\\forall"]
+	origin -> V1
+	V1 [label=V]
+	V1 -> x1
+	x1 [label=x]
+	origin -> F2
+	F2 [label=F]
+	F2 -> "(2"
+	"(2" [label="("]
+	F2 -> E3
+	E3 [label=E]
+	E3 -> F3
+	F3 [label=F]
+	F3 -> Q3
+	Q3 [label=Q]
+	Q3 -> "\\exists3"
+	"\\exists3" [label="\\exists"]
+	F3 -> V4
+	V4 [label=V]
+	V4 -> y4
+	y4 [label=y]
+	F3 -> F5
+	F5 [label=F]
+	F5 -> "(5"
+	"(5" [label="("]
+	F5 -> E6
+	E6 [label=E]
+	E6 -> F6
+	F6 [label=F]
+	F6 -> P6
+	P6 [label=P]
+	P6 -> P6
+	P6 [label=P]
+	P6 -> "(7"
+	"(7" [label="("]
+	P6 -> V8
+	V8 [label=V]
+	V8 -> x8
+	x8 [label=x]
+	P6 -> ",9"
+	",9" [label=","]
+	P6 -> V10
+	V10 [label=V]
+	V10 -> y10
+	y10 [label=y]
+	P6 -> ")11"
+	")11" [label=")"]
+	E6 -> L12
+	L12 [label=L]
+	L12 -> "\\implies12"
+	"\\implies12" [label="\\implies"]
+	E6 -> F13
+	F13 [label=F]
+	F13 -> "\\neg13"
+	"\\neg13" [label="\\neg"]
+	F13 -> F14
+	F14 [label=F]
+	F14 -> P14
+	P14 [label=P]
+	P14 -> Q14
+	Q14 [label=Q]
+	P14 -> "(15"
+	"(15" [label="("]
+	P14 -> V16
+	V16 [label=V]
+	V16 -> x16
+	x16 [label=x]
+	P14 -> ")17"
+	")17" [label=")"]
+	F5 -> ")18"
+	")18" [label=")"]
+	E3 -> L19
+	L19 [label=L]
+	L19 -> "\\lor19"
+	"\\lor19" [label="\\lor"]
+	E3 -> F20
+	F20 [label=F]
+	F20 -> Q20
+	Q20 [label=Q]
+	Q20 -> "\\exists20"
+	"\\exists20" [label="\\exists"]
+	F20 -> V21
+	V21 [label=V]
+	V21 -> z21
+	z21 [label=z]
+	F20 -> F22
+	F22 [label=F]
+	F22 -> "(22"
+	"(22" [label="("]
+	F22 -> E23
+	E23 [label=E]
+	E23 -> F23
+	F23 [label=F]
+	F23 -> "(23"
+	"(23" [label="("]
+	F23 -> E24
+	E24 [label=E]
+	E24 -> F24
+	F24 [label=F]
+	F24 -> "(24"
+	"(24" [label="("]
+	F24 -> E25
+	E25 [label=E]
+	E25 -> T25
+	T25 [label=T]
+	T25 -> C25
+	C25 [label=C]
+	C25 -> C25
+	C25 [label=C]
+	E25 -> "=26"
+	"=26" [label="="]
+	E25 -> T27
+	T27 [label=T]
+	T27 -> V27
+	V27 [label=V]
+	V27 -> z27
+	z27 [label=z]
+	F24 -> ")28"
+	")28" [label=")"]
+	E24 -> L29
+	L29 [label=L]
+	L29 -> "\\land29"
+	"\\land29" [label="\\land"]
+	E24 -> F30
+	F30 [label=F]
+	F30 -> P30
+	P30 [label=P]
+	P30 -> Q30
+	Q30 [label=Q]
+	P30 -> "(31"
+	"(31" [label="("]
+	P30 -> V32
+	V32 [label=V]
+	V32 -> z32
+	z32 [label=z]
+	P30 -> ")33"
+	")33" [label=")"]
+	F23 -> ")34"
+	")34" [label=")"]
+	E23 -> L35
+	L35 [label=L]
+	L35 -> "\\land35"
+	"\\land35" [label="\\land"]
+	E23 -> F36
+	F36 [label=F]
+	F36 -> P36
+	P36 [label=P]
+	P36 -> P36
+	P36 [label=P]
+	P36 -> "(37"
+	"(37" [label="("]
+	P36 -> V38
+	V38 [label=V]
+	V38 -> x38
+	x38 [label=x]
+	P36 -> ",39"
+	",39" [label=","]
+	P36 -> V40
+	V40 [label=V]
+	V40 -> z40
+	z40 [label=z]
+	P36 -> ")41"
+	")41" [label=")"]
+	F22 -> ")42"
+	")42" [label=")"]
+	F2 -> ")43"
+	")43" [label=")"]
+}
