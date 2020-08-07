@@ -1,5 +1,9 @@
 # First Order Logic Parser - Documentation
 
+## **NB**: Known Error
+
+Due to an oversight, this parser accepts some incorrect formulae, such as `formula: E y A x (R(x,y,x) implies not (aa == x)` (this formula should have one more `)` on the end). This is because I forgot to tell the parser to exit with an error if it reaches the end of the token stream but is still expecting a new symbol - in this case, it is expecting another `)`, and it thinks it has found one because it has neither incremented the lookahead counter nor encountered an error - it checks the same position again, is satisfied, and reaches the end of the recursion "successfully".
+
 ## Dependencies and Installation
 
 First and foremost, the parser requires Python version 3.6+ to run. It has been developed and tested on 3.7.x and 3.8.x

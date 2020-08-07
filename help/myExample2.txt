@@ -1,7 +1,0 @@
-variables:
-constants: C D
-predicates:
-equality: =
-connectives: \land \lor \implies \iff \neg
-quantifiers: \exists \forall
-formula: ( C = D )
